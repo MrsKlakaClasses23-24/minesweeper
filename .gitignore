@@ -1,0 +1,5 @@
+__pycache__/**
+controls/__pycache__/**
+windows/__pycache__/**
+tests/__pycache__/**
+solution/**
