@@ -120,17 +120,18 @@ class MinesweeperAI():
     # changes.
     def add_knowledge(self, safe_cell: Tuple[int, int], mine_count: int)-> None:
         # 1) Mark the incoming cell as safe
-
+        self.mark_safe(safe_cell)
 
         # 2) Add the cell to the set of moves that have been made
-
+        self.moves_made.add(safe_cell)
 
         # 3) Add new knowledge to our knowledge base
         # a) Use _calculate_neighbor_cells_and_count to get a set of cells and create a new KnowledgeSentence object
-
+        neighbor_cells, count = self._calculate_neighbor_cells_and_count(safe_cell, len(self.known
+        knowledge_sentence = KnowledgeSentence(neighbor_cells, count)
 
         # b) Add the knowledge sentence to self.knowledge_base
-
+        self.knowledge_base.append(knowledge_sentence)
 
         # 4) Infer new knowledge, now that we have included our new sentence in our knowledge base
         # We need to do this repeatedly until no knew knowledge is created
@@ -146,28 +147,43 @@ class MinesweeperAI():
                 # through, since marking mine cells will remove those cells from that set. 
                 # NOTE: Equality for knowledge senteces are based on cells in it, so empty sentences can cause 
                 # inifinte loops if you are not careful
-
+                if mine_count == len(self.all_cells):
+                    for cell in neighbor_cells:
+                        self.known_mine_cells.add(cell)
+                        changes = True
 
                 # b) if the count is 0, mark all of those mines as safe and set the changes flag to True
                 # NOTE: you will need to create a copy of the set of cells in the knowledge sentence to iterate 
                 # through, since marking safe cells will remove those cells from that set.
                 # NOTE: Equality for knowledge senteces are based on cells in it, so empty sentences can cause 
                 # inifinte loops if you are not careful
-                    
+                if mine_count == 0:
+                    cells = neighbor_cells
+                    for cell in cells:
+                        self.mark_safe(cell)
+                        changes = True
                 # c) Compare each knowledge sentence against each other sentence. if sentence1 is a 
                 # subset of sentence2, add a new sentence that takes the difference sentence2-sentence1 for both
                 # cells and mine_count and and set the changes flag to True.  Then break out of the inner loop 
+                for sentence_1 in self.knowledge_base:
+                    cells_1 = sentence_1.known_mine_cells
+                    for sentence_2 in self.knowledge_baase:
+                        cells_2 = sentence_2.known_mine_cells
+                        if cells_1 in cells_2:
+                            self.knowledge_base.append(KnowledgeSentence(cells_2-cells_1, len(cells_2)-1))
+                            changes = True
+                            break
 
-
-
-        raise NotImplementedError
 
     # TODO: Implement get_safe_move
     # *************************************
     # This function will see if there is a possible safe move.  If there is it will return
     # that safe cell, if there is not, it will return None.
     def get_safe_move(self) -> Tuple[int, int]:
-        raise NotImplementedError
+        if len(self.known_safe_cells) > 0:
+            return self.known_safe_cells[0]
+        else:
+            return None
     
 
     # TODO: Implement is_safe_move
@@ -175,4 +191,7 @@ class MinesweeperAI():
     # This function will see if the current cell is a safe move.  If there is it will return
     # True, otherwise it will return False.
     def is_safe_move(self, cell: Tuple[int, int]) -> bool:
-        raise NotImplementedError
+        if cell in self.known_mine_cells:
+            return False
+        else:
+            return True
